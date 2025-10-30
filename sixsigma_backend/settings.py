@@ -15,10 +15,7 @@ ALLOWED_HOSTS = ["*"]
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
-    "http://localhost:5173",
-    "http://localhost:5174",
+    "https://*"
 ]
 
 # opcional, pero útil si usas cabeceras personalizadas
@@ -129,13 +126,12 @@ SIMPLE_JWT = {
 
 
 CORS_ALLOWED_ORIGINS = [
-    os.environ.get('FRONTEND_ORIGIN', 'http://localhost:5173'),
-    'http://127.0.0.1:5173',  
+    os.environ.get('FRONTEND_ORIGIN', 'https://*'),
+
 ]
 CORS_ALLOW_CREDENTIALS = True
 
 # Para formularios/POST desde el front (aunque ahora uses GET, mejor dejarlo)
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
+    'https://*'
 ]
