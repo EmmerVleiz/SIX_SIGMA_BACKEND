@@ -11,7 +11,7 @@ USE_EXT_SCHEMA = os.environ.get("USE_EXT_SCHEMA", "0")
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'LKYpe5/J$=h~xD[sfvnLL;gGID9`7,+4(-DKV]AHST:DkooY=*')
 DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["*"]
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
