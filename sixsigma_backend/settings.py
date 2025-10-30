@@ -1,9 +1,9 @@
 import os, json
 from pathlib import Path
+from dotenv import load_dotenv
+from corsheaders.defaults import default_headers
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-from dotenv import load_dotenv
 load_dotenv(BASE_DIR / '.env')
 
 USE_EXT_SCHEMA = os.environ.get("USE_EXT_SCHEMA", "0")
@@ -11,20 +11,31 @@ USE_EXT_SCHEMA = os.environ.get("USE_EXT_SCHEMA", "0")
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'LKYpe5/J$=h~xD[sfvnLL;gGID9`7,+4(-DKV]AHST:DkooY=*')
 DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
 
+# 🌍 Acepta cualquier host (útil si despliegas en Render, Vercel, etc.)
 ALLOWED_HOSTS = ["*"]
 
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    "https://*"
-]
+# =========================================================
+# 🔓 CONFIGURACIÓN GLOBAL DE CORS (PERMITIR TODO)
+# =========================================================
+CORS_ALLOW_ALL_ORIGINS = True  # <- Esto habilita CORS universalmente
+CORS_ALLOW_CREDENTIALS = True
 
-# opcional, pero útil si usas cabeceras personalizadas
-from corsheaders.defaults import default_headers
+# Permite encabezados personalizados
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "authorization",
     "content-type",
 ]
 
+# Confianza CSRF opcional (para cookies/sesiones en frontends)
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://*",  # <- Acepta cualquier dominio HTTPS
+]
+
+# =========================================================
+# 🧩 APLICACIONES Y MIDDLEWARE
+# =========================================================
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -32,15 +43,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
-    'rest_framework',
-    'seguridad.apps.SeguridadConfig',   
-    'quality',
 
+    'corsheaders',        # <- Debe ir antes de rest_framework
+    'rest_framework',
+
+    'seguridad.apps.SeguridadConfig',
+    'quality',
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # <- Debe ir arriba
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -50,7 +62,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# =========================================================
+# ⚙️ CONFIGURACIÓN DE DJANGO / DRF
+# =========================================================
 ROOT_URLCONF = 'sixsigma_backend.urls'
+WSGI_APPLICATION = 'sixsigma_backend.wsgi.application'
+ASGI_APPLICATION = 'sixsigma_backend.asgi.application'
 
 TEMPLATES = [
     {
@@ -68,11 +85,14 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'sixsigma_backend.wsgi.application'
-ASGI_APPLICATION = 'sixsigma_backend.asgi.application'
+# =========================================================
+# 🗄️ BASE DE DATOS (SQL Server)
+# =========================================================
+DB_OPTIONS = os.environ.get(
+    'DB_OPTIONS',
+    '{"driver":"ODBC Driver 18 for SQL Server","extra_params":"Encrypt=yes;TrustServerCertificate=yes;"}'
+)
 
-# SQL Server
-DB_OPTIONS = os.environ.get('DB_OPTIONS', '{"driver":"ODBC Driver 18 for SQL Server","extra_params":"Encrypt=yes;TrustServerCertificate=yes;"}')
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
@@ -85,6 +105,9 @@ DATABASES = {
     }
 }
 
+# =========================================================
+# 🌎 LOCALIZACIÓN Y CONFIGURACIÓN GENERAL
+# =========================================================
 LANGUAGE_CODE = 'es'
 TIME_ZONE = os.environ.get('TZ', 'America/Guatemala')
 USE_I18N = True
@@ -96,6 +119,9 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# =========================================================
+# 🔐 CONFIGURACIÓN DRF + JWT
+# =========================================================
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -105,17 +131,10 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
     'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser'],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '60/min',
-        'user': '600/min',
-    },
 }
 
 from datetime import timedelta
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
@@ -123,15 +142,3 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
 }
-
-
-CORS_ALLOWED_ORIGINS = [
-    os.environ.get('FRONTEND_ORIGIN', 'https://*'),
-
-]
-CORS_ALLOW_CREDENTIALS = True
-
-# Para formularios/POST desde el front (aunque ahora uses GET, mejor dejarlo)
-CSRF_TRUSTED_ORIGINS = [
-    'https://*'
-]
